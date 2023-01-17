@@ -24,6 +24,7 @@ contract Crowdfund is Ownable {
         require(tokenAddress_ != address(0));
         require(projectOwner_ != address(0));
         require(fundingGoal_ > 0);
+        require(raised == 0);
 
         tokenAddress = tokenAddress_;
         projectOwner = projectOwner_;
@@ -33,6 +34,8 @@ contract Crowdfund is Ownable {
     function contribute(uint256 amount) external payable {
         // Get the ERC20 token contract
         IERC20 token = IERC20(tokenAddress);
+        
+        require(token.balanceOf(msg.sender) >= amount);
 
         // Transfer tokens from user to this contract
         token.transferFrom(msg.sender, address(this), amount);
@@ -68,8 +71,9 @@ contract Crowdfund is Ownable {
         emit Refund(msg.sender, refundAmount);
     }
 
-    function withdraw() public onlyOwner {
+    function withdraw() public {
         require(msg.sender == projectOwner, "Cant access!");
+        require(raised >= fundingGoal, "Funding goal has not been reached!");
 
         IERC20 token = IERC20(tokenAddress);
 
