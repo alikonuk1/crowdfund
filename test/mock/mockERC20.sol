@@ -1,21 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
-import "lib/solmate/src/tokens/ERC721.sol";
-import "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
-contract MockERC721 is ERC721 {
-    uint256 public currentTokenId;
+contract MockERC20 is ERC20 {
 
-    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) {}
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
 
-    function mintTo(address recipient) public payable returns (uint256) {
-        uint256 newItemId = ++currentTokenId;
-        _safeMint(recipient, newItemId);
-        return newItemId;
-    }
-
-    function tokenURI(uint256 id) public view virtual override returns (string memory) {
-        return Strings.toString(id);
+    function mint(uint256 amount) public {
+        _mint(msg.sender, amount);
     }
 }

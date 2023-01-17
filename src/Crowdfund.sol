@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import { IERC20 } from "./IERC20.sol";
-import {Ownable} from "./Ownable.sol";
+import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
-contract Crowdfund is Ownable{
+contract Crowdfund is Ownable {
     // ERC20 token
     address public tokenAddress;
 
@@ -49,14 +49,32 @@ contract Crowdfund is Ownable{
 
     function refund() external {
         // Ensure that the project has not reached its funding goal
-        require(raised < fundingGoal);
+        require(raised < fundingGoal, "Funding goal has been reached!");
+
+        // Get the ERC20 token contract
+        IERC20 token = IERC20(tokenAddress);
+
+        // Calculate refund amount
+        uint256 refundAmount = contributions[msg.sender];
 
         // Refund the customer's contribution
-        uint256 refundAmount = contributions[msg.sender];
-        emit Refund(msg.sender, refundAmount);
+        token.approve(address(this), refundAmount);
+        token.transferFrom(address(this), msg.sender, refundAmount);
 
         // Update the contract's state
         raised -= refundAmount;
         contributions[msg.sender] = 0;
+
+        emit Refund(msg.sender, refundAmount);
+    }
+
+    function withdraw() public onlyOwner {
+        require(msg.sender == projectOwner, "Cant access!");
+
+        IERC20 token = IERC20(tokenAddress);
+
+        uint256 amount = token.balanceOf(address(this));
+        token.approve(address(this), amount);
+        token.transferFrom(address(this), msg.sender, amount);
     }
 }
